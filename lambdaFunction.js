@@ -276,6 +276,37 @@ exports.handler = (event, context) => {
 
       }
 
+      case "GetPresident":{
+        context.succeed(
+          generateResponse(
+            buildSpeechletResponse("Donald J. Trump is the 45th President of the United States.", true),
+            {}
+          )
+
+      }
+
+      case "GetNationalDebt":{
+        var nationalDebtLink = "https://www.treasurydirect.gov/NP_WS/debt/current?format=json"
+
+        Https.get(nationalDebtLink, (response) => {
+          response.on('data', (data) => {
+            var natDebtJSON = JSON.parse(data)
+            var debt = natDebtJSON.totalDebt
+
+
+                context.succeed(
+                  generateResponse(
+                    buildSpeechletResponse("As of today, The United States collectively owes: $" +debt, true),
+                    {}
+                  )
+                )
+              })
+            })
+
+            break;
+
+      }
+
       case "GetTest":{
         var endpoint3= "https://www.mapquestapi.com/directions/v2/route?key=Eo2y0fnG8rFOL2LNtxzlq6KMEC4pwP04&from=40 Honey Locust,Irvine,CA&to=1 Civic Center Plz,Irvine,CA&routeType=pedestrian"
         var  secondBody=""
