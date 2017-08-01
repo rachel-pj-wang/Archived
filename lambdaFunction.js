@@ -282,6 +282,18 @@ exports.handler = (event, context) => {
             buildSpeechletResponse("Donald J. Trump is the 45th President of the United States.", true),
             {}
           )
+        )
+        break;
+
+      }
+      case "GetVicePresident":{
+        context.succeed(
+          generateResponse(
+            buildSpeechletResponse("Michael Richard Pence is the Vice President of the United States.", true),
+            {}
+          )
+        )
+        break;
 
       }
 
@@ -304,6 +316,43 @@ exports.handler = (event, context) => {
             })
 
             break;
+
+      }
+
+
+      case "GetCongressStructure":{
+
+        context.succeed(
+          generateResponse(
+            buildSpeechletResponse("Congress is the head of the legislative branch of the United States Federal Government.  Congress is comprised of the Senate and the House of Representatives.  Together, the two houses of Congress work together to pass bills that can then be sent to the President's desk to either be signed or vetoed.", true),
+            {}
+          )
+        )
+        break;
+
+      }
+
+      case "GetSenateStructure":{
+
+        context.succeed(
+          generateResponse(
+            buildSpeechletResponse("The U.S. Senate is comprised of 100 senators, 2 from each state.  The Vice President of the United States is the President of the Senate.  Under him or her is the President Pro Tempore, the most senior member of the Senate's majority party.", true),
+            {}
+          )
+        )
+        break;
+
+      }
+
+      case "GetHouseStructure":{
+
+        context.succeed(
+          generateResponse(
+            buildSpeechletResponse("The U.S. House of Representatives is comprised of 435 Representatives, with each one representing approximatelly 711,000 people.  The Speaker of the House is the leader of the House.  Under him or her is the Majority Leader, Whip, and so on and so forth.", true),
+            {}
+          )
+        )
+        break;
 
       }
 
