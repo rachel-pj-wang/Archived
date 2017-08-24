@@ -92,7 +92,7 @@ exports.handler = (event, context) => {
       console.log(`LAUNCH REQUEST`)
       context.succeed(
         generateResponse(
-          buildSpeechletResponse("Welcome to political pundit.", true),
+          buildSpeechletResponse("Welcome to political pundit.", false),
           {}
         )
       )
@@ -104,46 +104,70 @@ exports.handler = (event, context) => {
 
       switch(event.request.intent.name) {
         case "GetHouse":{
-
-          deviceId = event.context.System.device.deviceId;
-          consentToken = event.context.System.user.permissions.consentToken
-          path = "/v1/devices/" + deviceId + "/settings/address";
-          request = getRequestOptions(path, consentToken);
-
-          Https.get(request, (response) => {
-            response.on('data', (data) => {
-              addressJSON  = JSON.parse(data); //when this is "let" then it results in error
-
-              state = addressJSON.stateOrRegion;
-              city = addressJSON.city +"%20";
-              addressLine1 = addressJSON.addressLine1;
-              zipCode = addressJSON.postalCode;
-
-              endpoint2 = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDZxqzVTlhxpsj5mwg1C2JOblc29YndibA&address=" + addressLine1 +"&includeOffices=true&levels=country";
+          try{
 
 
-              body = ""
-              Https.get(endpoint2, (response) => {
-                response.on('data', (chunk) => { body += chunk })
-                response.on('end', () => {
-                  var namesJSON = JSON.parse(body);
-                  var congressmanName = namesJSON.officials[4].name;
-                  var congressmanParty = namesJSON.officials[4].party;
-                  var districtNumber = namesJSON.officials[4].district;
-                  var RepStatement = "Your Congressional representative's name is " + congressmanName +", and is of the " + congressmanParty + " party!  There are 435 representatives in the House of Representatives.";
+            deviceId = event.context.System.device.deviceId;
+            consentToken = event.context.System.user.permissions.consentToken
+            path = "/v1/devices/" + deviceId + "/settings/address";
+            request = getRequestOptions(path, consentToken);
 
-                  context.succeed(
-                    generateResponse(
-                      buildSpeechletResponse(RepStatement, true),
-                      {}
+            Https.get(request, (response) => {
+              response.on('data', (data) => {
+                addressJSON  = JSON.parse(data); //when this is "let" then it results in error
+
+                state = addressJSON.stateOrRegion;
+                city = addressJSON.city +"%20";
+                addressLine1 = addressJSON.addressLine1;
+                zipCode = addressJSON.postalCode;
+
+                endpoint2 = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDZxqzVTlhxpsj5mwg1C2JOblc29YndibA&address=" + addressLine1 +"&includeOffices=true&levels=country";
+
+
+                body = ""
+                Https.get(endpoint2, (response) => {
+                  response.on('data', (chunk) => { body += chunk })
+                  response.on('end', () => {
+                    var namesJSON = JSON.parse(body);
+                    var congressmanName = namesJSON.officials[4].name;
+                    var congressmanParty = namesJSON.officials[4].party;
+                    var districtNumber = namesJSON.officials[4].district;
+                    var RepStatement = "Your Congressional representative's name is " + congressmanName +", and is of the " + congressmanParty + " party!  There are 435 representatives in the House of Representatives.";
+
+                    context.succeed(
+                      generateResponse(
+                        buildSpeechletResponse(RepStatement, false),
+                        {}
+                      )
                     )
-                  )
+                  })
                 })
+
+
               })
-
-
             })
-          })
+
+          }
+          catch(err){
+
+            getLocationError(context)
+
+          }
+
+          break;
+        }
+
+
+
+        case "GetGDP":{
+          var Fred = require('fred-api');
+
+          apiKey = process.env.FRED_KEY;
+          fred   = new Fred("2a90fe274878fbce8ae5660935beac8a");
+
+          fred.getSeries({series_id: 'GNPCA'}, function(error, result) {
+    console.log(result)
+});
 
           break;
         }
@@ -152,56 +176,65 @@ exports.handler = (event, context) => {
 
 
         case "GetCongress":{
-          deviceId = event.context.System.device.deviceId;
 
-          consentToken = event.context.System.user.permissions.consentToken;
-          path = "/v1/devices/" + deviceId + "/settings/address";
-          request = getRequestOptions(path, consentToken);
+          try{
+            deviceId = event.context.System.device.deviceId;
 
-          Https.get(request, (response) => {
-            response.on('data', (data) => {
-              addressJSON  = JSON.parse(data); //when this is "let" then it results in error
-              state = addressJSON.stateOrRegion;
-              city = addressJSON.city +"%20";
-              addressLine1 = addressJSON.addressLine1;
-              zipCode = addressJSON.postalCode;
+            consentToken = event.context.System.user.permissions.consentToken;
+            path = "/v1/devices/" + deviceId + "/settings/address";
+            request = getRequestOptions(path, consentToken);
 
-              endpoint2 = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDZxqzVTlhxpsj5mwg1C2JOblc29YndibA&address=" + addressLine1 +"&includeOffices=true&levels=country";
+            Https.get(request, (response) => {
+              response.on('data', (data) => {
+                addressJSON  = JSON.parse(data); //when this is "let" then it results in error
+                state = addressJSON.stateOrRegion;
+                city = addressJSON.city +"%20";
+                addressLine1 = addressJSON.addressLine1;
+                zipCode = addressJSON.postalCode;
 
-
-              body = ""
-              Https.get(endpoint2, (response) => {
-                response.on('data', (chunk) => { body += chunk })
-                response.on('end', () => {
-                  var namesJSON = JSON.parse(body);
-                  var congressmanName = namesJSON.officials[4].name;
-                  var congressmanParty = namesJSON.officials[4].party;
-                  var districtNumber = namesJSON.officials[4].district;
-
-                  var RepStatement = "Your Congressional representative's name is " + congressmanName +", and is of the " + congressmanParty + " party!  ";
-
-                  var senate1Name = namesJSON.officials[2].name;
-                  var senate1Party = namesJSON.officials[2].party;
-                  var senate2Name = namesJSON.officials[3].name;
-                  var senate2Party = namesJSON.officials[3].party;
-
-                  var stateFullName  = stateNameJSON[state]
+                endpoint2 = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDZxqzVTlhxpsj5mwg1C2JOblc29YndibA&address=" + addressLine1 +"&includeOffices=true&levels=country";
 
 
-                  var SenateStatement = stateFullName + "'s U.S. senators are " + senate1Name + " of the " + senate1Party+ " party, as well as " + senate2Name + " of the " + senate2Party + " party.";
-                  context.succeed(
-                    generateResponse(
-                      buildSpeechletResponse(RepStatement + SenateStatement, true),
-                      {}
+                body = ""
+                Https.get(endpoint2, (response) => {
+                  response.on('data', (chunk) => { body += chunk })
+                  response.on('end', () => {
+                    var namesJSON = JSON.parse(body);
+                    var congressmanName = namesJSON.officials[4].name;
+                    var congressmanParty = namesJSON.officials[4].party;
+                    var districtNumber = namesJSON.officials[4].district;
+
+                    var RepStatement = "Your Congressional representative's name is " + congressmanName +", and is of the " + congressmanParty + " party!  ";
+
+                    var senate1Name = namesJSON.officials[2].name;
+                    var senate1Party = namesJSON.officials[2].party;
+                    var senate2Name = namesJSON.officials[3].name;
+                    var senate2Party = namesJSON.officials[3].party;
+
+                    var stateFullName  = stateNameJSON[state]
+
+
+                    var SenateStatement = stateFullName + "'s U.S. senators are " + senate1Name + " of the " + senate1Party+ " party, as well as " + senate2Name + " of the " + senate2Party + " party.";
+                    context.succeed(
+                      generateResponse(
+                        buildSpeechletResponse(RepStatement + SenateStatement, false),
+                        {}
+                      )
                     )
-                  )
+                  })
                 })
+
+
+
               })
-
-
-
             })
-          })
+
+          }
+          catch(err){
+
+            getLocationError(context)
+
+          }
 
           break;
         }
@@ -213,6 +246,8 @@ exports.handler = (event, context) => {
 
           case "GetPollingPrecinct":{
 
+
+            try{
 
 
             deviceId = event.context.System.device.deviceId;
@@ -263,7 +298,7 @@ exports.handler = (event, context) => {
 
                         context.succeed(
                           generateResponse(
-                            buildSpeechletResponse("Your designated polling precinct is located at: " + addressLinePoll + " in " + cityPoll + ", " + statePoll + ".  The precinct is only a " + minuteConversion+ " minute drive away from your house!", true),
+                            buildSpeechletResponse("Your designated polling precinct is located at: " + addressLinePoll + " in " + cityPoll + ", " + statePoll + ".  The precinct is only a " + minuteConversion+ " minute drive away from your house!", false),
                             {}
                           )
                         )
@@ -273,6 +308,14 @@ exports.handler = (event, context) => {
                 })
               })
             })
+
+
+          }
+          catch(err){
+
+            getLocationError(context)
+
+          }
             break;
 
           }
@@ -280,7 +323,7 @@ exports.handler = (event, context) => {
           case "GetPresident":{
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("Donald J. Trump is the 45th President of the United States.", true),
+                buildSpeechletResponse("Donald J. Trump is the 45th President of the United States.", false),
                 {}
               )
             )
@@ -290,7 +333,7 @@ exports.handler = (event, context) => {
           case "GetVicePresident":{
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("Michael Richard Pence is the Vice President of the United States.", true),
+                buildSpeechletResponse("Michael Richard Pence is the Vice President of the United States.", false),
                 {}
               )
             )
@@ -309,7 +352,7 @@ exports.handler = (event, context) => {
 
                 context.succeed(
                   generateResponse(
-                    buildSpeechletResponse("As of today, The United States collectively owes: $" +debt, true),
+                    buildSpeechletResponse("As of today, The United States collectively owes: $" +debt, false),
                     {}
                   )
                 )
@@ -325,7 +368,7 @@ exports.handler = (event, context) => {
 
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("Congress is the head of the legislative branch of the United States Federal Government.  Congress is comprised of the Senate and the House of Representatives.  Together, the two houses of Congress work together to pass bills that can then be sent to the President's desk to either be signed or vetoed.", true),
+                buildSpeechletResponse("Congress is the head of the legislative branch of the United States Federal Government.  Congress is comprised of the Senate and the House of Representatives.  Together, the two houses of Congress work together to pass bills that can then be sent to the President's desk to either be signed or vetoed.", false),
                 {}
               )
             )
@@ -337,7 +380,7 @@ exports.handler = (event, context) => {
 
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("The U.S. Senate is comprised of 100 senators, 2 from each state.  The Vice President of the United States is the President of the Senate.  Under him or her is the President Pro Tempore, the most senior member of the Senate's majority party.", true),
+                buildSpeechletResponse("The U.S. Senate is comprised of 100 senators, 2 from each state.  The Vice President of the United States is the President of the Senate.  Under him or her is the President Pro Tempore, the most senior member of the Senate's majority party.", false),
                 {}
               )
             )
@@ -349,7 +392,7 @@ exports.handler = (event, context) => {
 
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("The U.S. House of Representatives is comprised of 435 Representatives, with each one representing approximately 711,000 people.  The Speaker of the House is the leader of the House.  Under him or her is the Majority Leader, Whip, and so on and so forth.", true),
+                buildSpeechletResponse("The U.S. House of Representatives is comprised of 435 Representatives, with each one representing approximately 711,000 people.  The Speaker of the House is the leader of the House.  Under him or her is the Majority Leader, Whip, and so on and so forth.", false),
                 {}
               )
             )
@@ -366,116 +409,119 @@ exports.handler = (event, context) => {
             //var voteSmart = "https://api.votesmart.org/Votes.getBillActionVoteByOfficial?&key=8357d7f39e61304dbdeebd2e1772a40f&actionId=60869&candidateId=53270"
 
 
-            deviceId = event.context.System.device.deviceId;
-            consentToken = event.context.System.user.permissions.consentToken
-            path = "/v1/devices/" + deviceId + "/settings/address";
-            request = getRequestOptions(path, consentToken);
+            try{
 
-            Https.get(request, (response) => {
-              response.on('data', (data) => {
-                addressJSON  = JSON.parse(data); //when this is "let" then it results in error
+              deviceId = event.context.System.device.deviceId;
+              consentToken = event.context.System.user.permissions.consentToken
+              path = "/v1/devices/" + deviceId + "/settings/address";
+              request = getRequestOptions(path, consentToken);
 
-                var addressLine1 = addressJSON.addressLine1;
-          //  var addressLine1 = "40 Honey Locust"
+              Https.get(request, (response) => {
+                response.on('data', (data) => {
+                  addressJSON  = JSON.parse(data); //when this is "let" then it results in error
 
-                console.log(addressLine1)
+                  var addressLine1 = addressJSON.addressLine1;
+                  //  var addressLine1 = "40 Honey Locust"
 
-
-
-                endpoint2 = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDZxqzVTlhxpsj5mwg1C2JOblc29YndibA&address=" + addressLine1 +"&includeOffices=true&levels=country";
-
-
-                body = ""
-                Https.get(endpoint2, (response) => {
-                  response.on('data', (chunk) => { body += chunk })
-                  response.on('end', () => {
-
-                    var namesJSON = JSON.parse(body);
-                    //var congressmanFullName = namesJSON.officials[4].name;
-                    var senate1Name = namesJSON.officials[2].name;
-                    //var senate2Name = namesJSON.officials[3].name;
-
-                    var lastNameIndex = senate1Name.lastIndexOf(" ");
-                    var senator1LastName = senate1Name.substring(lastNameIndex+1)
-                    console.log("Senator's Last name : " +senator1LastName)
+                  console.log(addressLine1)
 
 
 
-                    var link = "https://api.votesmart.org/Officials.getByLastname?&key=8357d7f39e61304dbdeebd2e1772a40f&lastName="+ senator1LastName
-
-                    //Step 1: Get candidate ID
-                    Https.get(link, (response) => {
-                      response.on('data', (data) => {
-                        console.log("got votesmart last name")
-
-                        //console.log(data)
-                        var parseString = require('xml2js').parseString;
-                        var xml = data
-                        var xmlToJSONstring = null
-                        var JSONstringToJSON = null
-                        parseString(xml, function (err, result) {
-
-                          xmlToJSONstring = JSON.stringify(result)
-                          JSONstringToJSON = JSON.parse(xmlToJSONstring)
+                  endpoint2 = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDZxqzVTlhxpsj5mwg1C2JOblc29YndibA&address=" + addressLine1 +"&includeOffices=true&levels=country";
 
 
-                        }); //close of parseString
+                  body = ""
+                  Https.get(endpoint2, (response) => {
+                    response.on('data', (chunk) => { body += chunk })
+                    response.on('end', () => {
+
+                      var namesJSON = JSON.parse(body);
+                      //var congressmanFullName = namesJSON.officials[4].name;
+                      var senate1Name = namesJSON.officials[2].name;
+                      //var senate2Name = namesJSON.officials[3].name;
+
+                      var lastNameIndex = senate1Name.lastIndexOf(" ");
+                      var senator1LastName = senate1Name.substring(lastNameIndex+1)
+                      console.log("Senator's Last name : " +senator1LastName)
 
 
 
-                        var candidateId= JSONstringToJSON.candidateList.candidate[0].candidateId[0]
-                        var office = JSONstringToJSON.candidateList.candidate[0].title[0]
-                        var firstName =  JSONstringToJSON.candidateList.candidate[0].firstName[0]
-                        var lastName = JSONstringToJSON.candidateList.candidate[0].lastName[0]
-                        console.log(office)
-                        var actionID = 60869
+                      var link = "https://api.votesmart.org/Officials.getByLastname?&key=8357d7f39e61304dbdeebd2e1772a40f&lastName="+ senator1LastName
 
-                        var voteSmart = "https://api.votesmart.org/Votes.getBillActionVoteByOfficial?&key=8357d7f39e61304dbdeebd2e1772a40f&actionId="+ actionID+"&candidateId=" + candidateId
+                      //Step 1: Get candidate ID
+                      Https.get(link, (response) => {
+                        response.on('data', (data) => {
+                          console.log("got votesmart last name")
+
+                          //console.log(data)
+                          var parseString = require('xml2js').parseString;
+                          var xml = data
+                          var xmlToJSONstring = null
+                          var JSONstringToJSON = null
+                          parseString(xml, function (err, result) {
+
+                            xmlToJSONstring = JSON.stringify(result)
+                            JSONstringToJSON = JSON.parse(xmlToJSONstring)
 
 
-
-                        //If you want to work on other bills later, you must request the action ID of a given bill
-
-                        var yay_nay= null
-                        var billRawName = null
-                        var billShortName = null
-                        Https.get(voteSmart, (response) => {
-                          response.on('data', (data) => {
-                            var parseString = require('xml2js').parseString;
-                            var xml = data
-                            parseString(xml, function (err, result) {
-                              console.dir(result);
-
-                              var xmlToJSONstring = JSON.stringify(result)
-                              var JSONstringToJSON = JSON.parse(xmlToJSONstring)
-                              yay_nay = JSONstringToJSON.votes.vote[0].action[0]
-                              billRawName = JSONstringToJSON.votes.generalInfo[0].title[0]
+                          }); //close of parseString
 
 
 
+                          var candidateId= JSONstringToJSON.candidateList.candidate[0].candidateId[0]
+                          var office = JSONstringToJSON.candidateList.candidate[0].title[0]
+                          var firstName =  JSONstringToJSON.candidateList.candidate[0].firstName[0]
+                          var lastName = JSONstringToJSON.candidateList.candidate[0].lastName[0]
+                          console.log(office)
+                          var actionID = 60869
 
-                              console.log(yay_nay)
+                          var voteSmart = "https://api.votesmart.org/Votes.getBillActionVoteByOfficial?&key=8357d7f39e61304dbdeebd2e1772a40f&actionId="+ actionID+"&candidateId=" + candidateId
 
 
-                            });
 
-                            if(yay_nay == "yay"){
-                              yay_nay = "for"
-                            }
-                            else{
-                              yay_nay= "against"
-                            }
+                          //If you want to work on other bills later, you must request the action ID of a given bill
 
-                            var indexOfBillName = billRawName.lastIndexOf("- ")
-                            billShortName = billRawName.substring(indexOfBillName+2)
+                          var yay_nay= null
+                          var billRawName = null
+                          var billShortName = null
+                          Https.get(voteSmart, (response) => {
+                            response.on('data', (data) => {
+                              var parseString = require('xml2js').parseString;
+                              var xml = data
+                              parseString(xml, function (err, result) {
+                                console.dir(result);
 
-                            var finalText = office +" " + firstName  +" "+ lastName+ " voted " + yay_nay +" the " + billShortName
-                            context.succeed(
-                              generateResponse(
-                                buildSpeechletResponse(finalText, true),
-                                {}
+                                var xmlToJSONstring = JSON.stringify(result)
+                                var JSONstringToJSON = JSON.parse(xmlToJSONstring)
+                                yay_nay = JSONstringToJSON.votes.vote[0].action[0]
+                                billRawName = JSONstringToJSON.votes.generalInfo[0].title[0]
+
+
+
+
+                                console.log(yay_nay)
+
+
+                              });
+
+                              if(yay_nay == "yay"){
+                                yay_nay = "for"
+                              }
+                              else{
+                                yay_nay= "against"
+                              }
+
+                              var indexOfBillName = billRawName.lastIndexOf("- ")
+                              billShortName = billRawName.substring(indexOfBillName+2)
+
+                              var finalText = office +" " + firstName  +" "+ lastName+ " voted " + yay_nay +" the " + billShortName
+                              context.succeed(
+                                generateResponse(
+                                  buildSpeechletResponse(finalText, false),
+                                  {}
+                                )
                               )
-                            )
+                            })
                           })
                         })
                       })
@@ -483,7 +529,13 @@ exports.handler = (event, context) => {
                   })
                 })
               })
-            })
+
+            }
+            catch(err){
+
+              getLocationError(context)
+
+            }
 
 
             break;
@@ -502,10 +554,19 @@ exports.handler = (event, context) => {
 
         break;
 
-        case "SessionEndedRequest":
+        case "SessionEndedRequest":{
         // Session Ended Request
+
+        context.succeed(
+          generateResponse(
+            buildSpeechletResponse("Thanks for using me.  See you later!", true),
+            {}
+          )
+        )
         console.log(`SESSION ENDED REQUEST`)
+
         break;
+      }
 
         default:
         context.fail(`INVALID REQUEST TYPE: ${event.request.type}`)
@@ -547,4 +608,15 @@ exports.handler = (event, context) => {
       'headers': {
         'Authorization': 'Bearer ' + consentToken}
       }
+    }
+
+
+
+    function getLocationError(context){
+      context.succeed(
+        generateResponse(
+          buildSpeechletResponse("In order to tell you this information, you'll need to enable location services in the Amazon Alexa App.", false),
+          {}
+        )
+      )
     }
