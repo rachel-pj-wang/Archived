@@ -92,7 +92,7 @@ exports.handler = (event, context) => {
       console.log(`LAUNCH REQUEST`)
       context.succeed(
         generateResponse(
-          buildSpeechletResponse("Welcome to political pundit.", false),
+          buildSpeechletResponse("Welcome to political pundit.  Feel free to ask me questions about the United States Government!", false),
           {}
         )
       )
@@ -136,7 +136,7 @@ exports.handler = (event, context) => {
 
                     context.succeed(
                       generateResponse(
-                        buildSpeechletResponse(RepStatement, false),
+                        buildSpeechletResponse(RepStatement, true),
                         {}
                       )
                     )
@@ -217,7 +217,7 @@ exports.handler = (event, context) => {
                     var SenateStatement = stateFullName + "'s U.S. senators are " + senate1Name + " of the " + senate1Party+ " party, as well as " + senate2Name + " of the " + senate2Party + " party.";
                     context.succeed(
                       generateResponse(
-                        buildSpeechletResponse(RepStatement + SenateStatement, false),
+                        buildSpeechletResponse(RepStatement + SenateStatement, true),
                         {}
                       )
                     )
@@ -298,7 +298,7 @@ exports.handler = (event, context) => {
 
                         context.succeed(
                           generateResponse(
-                            buildSpeechletResponse("Your designated polling precinct is located at: " + addressLinePoll + " in " + cityPoll + ", " + statePoll + ".  The precinct is only a " + minuteConversion+ " minute drive away from your house!", false),
+                            buildSpeechletResponse("Your designated polling precinct is located at: " + addressLinePoll + " in " + cityPoll + ", " + statePoll + ".  The precinct is only a " + minuteConversion+ " minute drive away from your house!", true),
                             {}
                           )
                         )
@@ -323,7 +323,7 @@ exports.handler = (event, context) => {
           case "GetPresident":{
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("Donald J. Trump is the 45th President of the United States.", false),
+                buildSpeechletResponse("Donald J. Trump is the 45th President of the United States.", true),
                 {}
               )
             )
@@ -333,7 +333,7 @@ exports.handler = (event, context) => {
           case "GetVicePresident":{
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("Michael Richard Pence is the Vice President of the United States.", false),
+                buildSpeechletResponse("Michael Richard Pence is the Vice President of the United States.", true),
                 {}
               )
             )
@@ -352,7 +352,7 @@ exports.handler = (event, context) => {
 
                 context.succeed(
                   generateResponse(
-                    buildSpeechletResponse("As of today, The United States collectively owes: $" +debt, false),
+                    buildSpeechletResponse("As of today, The United States collectively owes: $" +debt, true),
                     {}
                   )
                 )
@@ -368,7 +368,7 @@ exports.handler = (event, context) => {
 
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("Congress is the head of the legislative branch of the United States Federal Government.  Congress is comprised of the Senate and the House of Representatives.  Together, the two houses of Congress work together to pass bills that can then be sent to the President's desk to either be signed or vetoed.", false),
+                buildSpeechletResponse("Congress is the head of the legislative branch of the United States Federal Government.  Congress is comprised of the Senate and the House of Representatives.  Together, the two houses of Congress work together to pass bills that can then be sent to the President's desk to either be signed or vetoed.", true),
                 {}
               )
             )
@@ -380,7 +380,7 @@ exports.handler = (event, context) => {
 
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("The U.S. Senate is comprised of 100 senators, 2 from each state.  The Vice President of the United States is the President of the Senate.  Under him or her is the President Pro Tempore, the most senior member of the Senate's majority party.", false),
+                buildSpeechletResponse("The U.S. Senate is comprised of 100 senators, 2 from each state.  The Vice President of the United States is the President of the Senate.  Under him or her is the President Pro Tempore, the most senior member of the Senate's majority party.", true),
                 {}
               )
             )
@@ -392,7 +392,7 @@ exports.handler = (event, context) => {
 
             context.succeed(
               generateResponse(
-                buildSpeechletResponse("The U.S. House of Representatives is comprised of 435 Representatives, with each one representing approximately 711,000 people.  The Speaker of the House is the leader of the House.  Under him or her is the Majority Leader, Whip, and so on and so forth.", false),
+                buildSpeechletResponse("The U.S. House of Representatives is comprised of 435 Representatives, with each one representing approximately 711,000 people.  The Speaker of the House is the leader of the House.  Under him or her is the Majority Leader, Whip, and so on and so forth.", true),
                 {}
               )
             )
@@ -517,7 +517,7 @@ exports.handler = (event, context) => {
                               var finalText = office +" " + firstName  +" "+ lastName+ " voted " + yay_nay +" the " + billShortName
                               context.succeed(
                                 generateResponse(
-                                  buildSpeechletResponse(finalText, false),
+                                  buildSpeechletResponse(finalText, true),
                                   {}
                                 )
                               )
@@ -546,6 +546,32 @@ exports.handler = (event, context) => {
             break;
           }
 
+          case "SessionEndedRequest":{
+          // Session Ended Request
+
+          context.succeed(
+            generateResponse(
+              buildSpeechletResponse("Thanks for using me.  See you later!", true),
+              {}
+            )
+          )
+          console.log(`SESSION ENDED REQUEST`)
+
+          break;
+        }
+
+        case "GetHelp":{
+          context.succeed(
+            generateResponse(
+              buildSpeechletResponse("You can ask me about things pertaining to the United States government and economy.  For example, you can ask 'who represents me in congress?' or 'how large is the US national debt?'  Now, what would you  like to know?", false),
+              {}
+            )
+          )
+
+
+          break;
+        }
+
 
 
           default:
@@ -554,19 +580,7 @@ exports.handler = (event, context) => {
 
         break;
 
-        case "SessionEndedRequest":{
-        // Session Ended Request
 
-        context.succeed(
-          generateResponse(
-            buildSpeechletResponse("Thanks for using me.  See you later!", true),
-            {}
-          )
-        )
-        console.log(`SESSION ENDED REQUEST`)
-
-        break;
-      }
 
         default:
         context.fail(`INVALID REQUEST TYPE: ${event.request.type}`)
@@ -615,7 +629,7 @@ exports.handler = (event, context) => {
     function getLocationError(context){
       context.succeed(
         generateResponse(
-          buildSpeechletResponse("In order to tell you this information, you'll need to enable location services in the Amazon Alexa App.", false),
+          buildSpeechletResponse("In order to tell you this information, you'll need to enable location services in the Amazon Alexa App.", true),
           {}
         )
       )
